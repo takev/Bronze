@@ -1,8 +1,5 @@
-//
-//  string_extra.swift
-//  DimensionsCAM
-// DimensionsCAM - A multi-axis tool path generator for a milling machine
-// Copyright (C) 2015  Take Vos
+// Bronze - A standard library for Swift.
+// Copyright (C) 2015-2016  Take Vos
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

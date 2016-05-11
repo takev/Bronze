@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		680AE7A11CDABFCA00C5AB9A /* NetworkAddress_tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 680AE7A01CDABFCA00C5AB9A /* NetworkAddress_tests.swift */; };
 		680AE7A31CDCA4AB00C5AB9A /* SocketAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 680AE7A21CDCA4AB00C5AB9A /* SocketAddress.swift */; };
 		680AE7A61CDDF31500C5AB9A /* LogPriority.swift in Sources */ = {isa = PBXBuildFile; fileRef = 680AE7A51CDDF31500C5AB9A /* LogPriority.swift */; };
 		680AE7AA1CDDFAA400C5AB9A /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 680AE7A91CDDFAA400C5AB9A /* Log.swift */; };
@@ -32,7 +31,6 @@
 		682EA8F51CCCBC5D00A5C807 /* Timestamp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 682EA8F41CCCBC5D00A5C807 /* Timestamp.swift */; };
 		682EA8FD1CD16B4600A5C807 /* Period.swift in Sources */ = {isa = PBXBuildFile; fileRef = 682EA8FC1CD16B4600A5C807 /* Period.swift */; };
 		682EA9001CD2C0ED00A5C807 /* UDPEventHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 682EA8FF1CD2C0ED00A5C807 /* UDPEventHandler.swift */; };
-		682EA9021CD4FBEE00A5C807 /* NetworkAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 682EA9011CD4FBEE00A5C807 /* NetworkAddress.swift */; };
 		68DF0F781C2643F7007AB7E3 /* BigInt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68DF0F771C2643F7007AB7E3 /* BigInt.swift */; };
 		68DF0F7E1C28CCDD007AB7E3 /* BigInt_tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68DF0F7D1C28CCDD007AB7E3 /* BigInt_tests.swift */; };
 		68DF0F801C334D4C007AB7E3 /* BigInt_utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68DF0F7F1C334D4C007AB7E3 /* BigInt_utils.swift */; };
@@ -68,7 +66,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		680AE7A01CDABFCA00C5AB9A /* NetworkAddress_tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkAddress_tests.swift; sourceTree = "<group>"; };
 		680AE7A21CDCA4AB00C5AB9A /* SocketAddress.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SocketAddress.swift; sourceTree = "<group>"; };
 		680AE7A51CDDF31500C5AB9A /* LogPriority.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogPriority.swift; sourceTree = "<group>"; };
 		680AE7A91CDDFAA400C5AB9A /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
@@ -92,7 +89,6 @@
 		682EA8F41CCCBC5D00A5C807 /* Timestamp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Timestamp.swift; sourceTree = "<group>"; };
 		682EA8FC1CD16B4600A5C807 /* Period.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Period.swift; sourceTree = "<group>"; };
 		682EA8FF1CD2C0ED00A5C807 /* UDPEventHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UDPEventHandler.swift; sourceTree = "<group>"; };
-		682EA9011CD4FBEE00A5C807 /* NetworkAddress.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkAddress.swift; sourceTree = "<group>"; };
 		68DF0F751C24D1F6007AB7E3 /* Preferences.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Preferences.md; sourceTree = "<group>"; };
 		68DF0F771C2643F7007AB7E3 /* BigInt.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BigInt.swift; sourceTree = "<group>"; };
 		68DF0F7D1C28CCDD007AB7E3 /* BigInt_tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BigInt_tests.swift; sourceTree = "<group>"; };
@@ -215,8 +211,6 @@
 			isa = PBXGroup;
 			children = (
 				682EA8FF1CD2C0ED00A5C807 /* UDPEventHandler.swift */,
-				682EA9011CD4FBEE00A5C807 /* NetworkAddress.swift */,
-				680AE7A01CDABFCA00C5AB9A /* NetworkAddress_tests.swift */,
 				680AE7A21CDCA4AB00C5AB9A /* SocketAddress.swift */,
 			);
 			name = Network;
@@ -468,7 +462,6 @@
 				68DF0F801C334D4C007AB7E3 /* BigInt_utils.swift in Sources */,
 				682A0B871C1874F6006199BB /* string_extra.swift in Sources */,
 				68DF0FA11C386C00007AB7E3 /* BigInt_division.swift in Sources */,
-				682EA9021CD4FBEE00A5C807 /* NetworkAddress.swift in Sources */,
 				681F6BAC1CDF20BF006EAE96 /* LogDestination.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -481,7 +474,6 @@
 				682A0B841C1873D6006199BB /* CommandLineParser_tests.swift in Sources */,
 				681F6BAA1CDE7F30006EAE96 /* Log_tests.swift in Sources */,
 				68DF0F7E1C28CCDD007AB7E3 /* BigInt_tests.swift in Sources */,
-				680AE7A11CDABFCA00C5AB9A /* NetworkAddress_tests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
