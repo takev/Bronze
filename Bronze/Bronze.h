@@ -16,4 +16,4 @@ FOUNDATION_EXPORT const unsigned char BronzeVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <Bronze/PublicHeader.h>
 
-
+#import <Bronze/integer_intrinsics.h>
