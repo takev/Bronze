@@ -17,11 +17,20 @@
 import Foundation
 
 
-class EventHandler {
-    weak var loop : EventLoop?
+public class EventHandler {
+    unowned var loop : EventLoop
 
-    var optionalFileDescriptor: Int? = nil
-    var optionalWaitingUntilDate: Timestamp? = nil
+    var optionalFileDescriptor: Int32? {
+        return nil
+    }
+
+    var optionalWaitingUntilDate: Timestamp? {
+        return nil
+    }
+
+    init(loop: EventLoop) {
+        self.loop = loop
+    }
 
     var waitingUntilReadable: Bool {
         return false

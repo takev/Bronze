@@ -24,7 +24,7 @@ public class Log {
 
     init(logDestination: LogDestination = LogDestinationStderr()) {
         self.logDestination = logDestination
-        logRing = Ring<LogItem>(nrItems: 4096)
+        logRing = Ring<LogItem>(size: 4096)
 
         let priority = DISPATCH_QUEUE_PRIORITY_DEFAULT
         dispatch_async(dispatch_get_global_queue(priority, 0)) {
@@ -34,7 +34,7 @@ public class Log {
 
     func logLoop() {
         while true {
-            while let item = logRing.remove() {
+            while let item = logRing.popFront() {
                 let fullMessage = String(format: item.msg, parameters: item.params)
                 let logLine = String(format: "%@ %@ %@", item.timestamp, item.priority, fullMessage)
 
@@ -54,7 +54,7 @@ public class Log {
     static func log(priority: LogPriority, msg: String, params: [Any]) {
         let logItem = LogItem(timestamp: Timestamp.now(), priority: priority, msg: msg, params: params)
 
-        while !sharedInstance.logRing.add(logItem) {
+        while !sharedInstance.logRing.pushBack(logItem) {
             usleep(10000)
         }
     }
