@@ -15,12 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-func shiftLeftByBits(lhs: BigInt, _ rhs: Int, carryAndAccumulator: UInt64 = 0) -> BigInt {
-    var carryAndAccumulator = carryAndAccumulator;
-    let shiftNrDigits = rhs >> 5
-    let shiftNrBits = rhs & 0x1f
+func shiftLeftByBits(lhs: BigInt, _ rhs: Int, carry: UInt64 = 0) -> BigInt {
+    var carry = carry;
+    let shiftNrDigits = rhs >> 6
+    let shiftNrBits = rhs & 0x3f
 
-    var newDigits = Array<UInt32>(count: lhs.digits.count + shiftNrDigits + 1, repeatedValue: 0)
+    var newDigits = Array<UInt64>(count: lhs.digits.count + shiftNrDigits + 1, repeatedValue: 0)
 
     for i in 0 ..< newDigits.count {
         if (i < shiftNrDigits) {
@@ -29,9 +29,7 @@ func shiftLeftByBits(lhs: BigInt, _ rhs: Int, carryAndAccumulator: UInt64 = 0) -
             let j = i - shiftNrDigits
 
             // lhs-subscript automaticaly sign extends, so no need to worry about that.
-            carryAndAccumulator |= (UInt64(lhs[j]) << UInt64(shiftNrBits))
-            newDigits[i] = UInt32(carryAndAccumulator & 0xffffffff)
-            carryAndAccumulator >>= 32
+            (newDigits[i], carry) = shiftl_overflow(lhs[j], shiftNrBits, carry: carry)
         }
     }
 
@@ -39,38 +37,45 @@ func shiftLeftByBits(lhs: BigInt, _ rhs: Int, carryAndAccumulator: UInt64 = 0) -
 }
 
 func shiftLeftByDigits(lhs: BigInt, _ rhs: Int) -> BigInt {
-    return BigInt(digits: Array<UInt32>(count: rhs, repeatedValue: 0) + lhs.digits)
+    return BigInt(digits: Array<UInt64>(count: rhs, repeatedValue: 0) + lhs.digits)
 }
 
-func shiftLeftByOneBit(lhs: BigInt, newBit: Bool = false) -> BigInt {
+func shiftLeftByAtMostOneDigit(lhs: BigInt, _ rhs: Int, carry: UInt64 = 0) -> BigInt {
+    var carry = carry;
+
     // Sign extend with one extra digit to handle to potential overflow.
     var newDigits = lhs.digits + [lhs[lhs.digits.count]]
 
-    var carryAndAccumulator: UInt64 = newBit ? 1 : 0
     for i in 0 ..< newDigits.count {
-        carryAndAccumulator |= (UInt64(newDigits[i]) << 1)
-        newDigits[i] = UInt32(carryAndAccumulator & 0xffffffff)
-        carryAndAccumulator >>= 32
+        (newDigits[i], carry) = shiftl_overflow(lhs[i], rhs, carry: carry)
     }
 
     return BigInt(digits: newDigits)
 }
 
-func shiftRightByBits(lhs: BigInt, _ rhs: Int) -> BigInt {
-    let shiftNrDigits = rhs >> 5
-    let shiftNrBits = rhs & 0x1f
+func shiftLeftByOneBit(lhs: BigInt, newBit: Bool = false) -> BigInt {
+    return shiftLeftByAtMostOneDigit(lhs, 1, carry: newBit ? 1 : 0)
+}
 
-    var newDigits = Array<UInt32>(count: lhs.digits.count - shiftNrDigits + 1, repeatedValue: 0)
+func shiftRightByBits(lhs: BigInt, _ rhs: Int) -> BigInt {
+    let shiftNrDigits = rhs >> 6
+    let shiftNrBits = rhs & 0x3f
+
+    var newDigits = Array<UInt64>(count: lhs.digits.count - shiftNrDigits + 1, repeatedValue: 0)
 
     // Fill in the carry by the sign of the lhs (take a digit beyond the number of digits available).
-    var carryAndAccumulator: UInt64 = UInt64(lhs[lhs.digits.count]) << 32
+    var carry: UInt64 = lhs[lhs.digits.count]
+
+    // Handle the first digit by sign extending.
     var i = newDigits.count - 1
+    let j = i + shiftNrDigits
+    (newDigits[i], carry) = shiftr_overflow_sign_extend(lhs[j], shiftNrBits)
+    i -= 1
+
     while i >= 0 {
         let j = i + shiftNrDigits
 
-        carryAndAccumulator |= (UInt64(lhs[j]) << UInt64(32 - shiftNrBits))
-        newDigits[i] = UInt32(carryAndAccumulator >> 32)
-        carryAndAccumulator <<= 32
+        (newDigits[i], carry) = shiftr_overflow(lhs[j], shiftNrBits, carry: carry)
 
         i -= 1
     }
@@ -80,7 +85,7 @@ func shiftRightByBits(lhs: BigInt, _ rhs: Int) -> BigInt {
 
 func shiftRightByDigits(lhs: BigInt, _ rhs: Int) -> BigInt {
     let nrDigitsToShift = min(rhs, lhs.digits.count)
-    let newDigits = Array<UInt32>(lhs.digits[nrDigitsToShift ..< lhs.digits.count])
+    let newDigits = Array<UInt64>(lhs.digits[nrDigitsToShift ..< lhs.digits.count])
 
     if lhs.isPositive || newDigits.count > 0 {
         // If it is positive can simply discard digits.
@@ -88,21 +93,29 @@ func shiftRightByDigits(lhs: BigInt, _ rhs: Int) -> BigInt {
 
     } else {
         // Return -1 if we shifted maximum to the right on a negative number.
-        return BigInt(digits: [UInt32(0xffffffff)])
+        return BigInt(digits: [0xffffffff_ffffffff])
+    }
+}
+
+func shiftRightByAtMostOneDigit(lhs: BigInt, _ rhs: Int) -> BigInt {
+    if lhs.digits.count == 0 {
+        return BigInt()
+
+    } else {
+        var newDigits = Array<UInt64>(count: lhs.digits.count, repeatedValue: 0)
+
+        // Fill in the carry by the sign of the lhs (take a digit beyond the number of digits available).
+        var carry: UInt64
+        (newDigits[newDigits.count - 1], carry) = shiftr_overflow_sign_extend(lhs[newDigits.count - 1], rhs)
+        for i in (0 ..< newDigits.count - 1).reverse() {
+            (newDigits[i], carry) = shiftr_overflow(lhs[i], rhs, carry: carry)
+        }
+
+        return BigInt(digits: newDigits)
     }
 }
 
 func shiftRightByOneBit(lhs: BigInt) -> BigInt {
-    var newDigits = lhs.digits
-
-    // Fill in the carry by the sign of the lhs (take a digit beyond the number of digits available).
-    var carryAndAccumulator: UInt64 = lhs < 0 ? 0x80000000_00000000 : 0
-    for i in (0 ..< newDigits.count).reverse() {
-        carryAndAccumulator |= (UInt64(newDigits[i]) << UInt64(32 - 1))
-        newDigits[i] = UInt32(carryAndAccumulator >> 32)
-        carryAndAccumulator <<= 32
-    }
-
-    return BigInt(digits: newDigits)
+    return shiftRightByAtMostOneDigit(lhs, 1)
 }
 

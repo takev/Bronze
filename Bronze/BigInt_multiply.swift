@@ -14,40 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-func multiplyByDigit(lhs: BigInt, _ rhs: UInt32) -> BigInt {
+func multiplyByDigit(lhs: BigInt, _ rhs: UInt64) -> BigInt {
     let nrNewDigits = lhs.digits.count + 1
-    var newDigits = Array<UInt32>(count: nrNewDigits, repeatedValue: 0)
+    var newDigits = Array<UInt64>(count: nrNewDigits, repeatedValue: 0)
 
-    var carryAndAccumulator: UInt64 = 0
+    var carry: UInt64 = 0
     for i in 0 ..< nrNewDigits {
-        carryAndAccumulator += (UInt64(lhs[i]) * UInt64(rhs))
-
-        newDigits[i] = UInt32(carryAndAccumulator & 0xffffffff)
-
-        carryAndAccumulator >>= 32
+        let result: UInt64
+        (result, carry) = mul_overflow(lhs[i], rhs, carry: carry)
+        newDigits[i] = result
     }
 
     return BigInt(digits: newDigits)
-}
-
-public func multiplySchoolAlgorithmSlow(lhs: BigInt, _ rhs: BigInt, accumulator: BigInt = BigInt()) -> BigInt {
-    var accumulator = accumulator
-    let lhs_abs = abs(lhs)
-    let rhs_abs = abs(rhs)
-
-    let result_positive: Bool
-    switch (lhs >= 0, rhs >= 0) {
-    case (false, false):    result_positive = true
-    case (false, true):     result_positive = false
-    case (true, false):     result_positive = false
-    case (true, true):      result_positive = true
-    }
-
-    for i in 0 ..< rhs.digits.count {
-        accumulator = accumulator + (multiplyByDigit(lhs_abs, rhs_abs[i]) << (i*32))
-    }
-
-    return result_positive  ? accumulator : -accumulator
 }
 
 public func multiplySchoolAlgorithm(lhs: BigInt, _ rhs: BigInt) -> BigInt {
@@ -55,7 +33,7 @@ public func multiplySchoolAlgorithm(lhs: BigInt, _ rhs: BigInt) -> BigInt {
     let rhs_abs = abs(rhs).digits
 
     // Reserve one extra digit for overflow.
-    var accumulator = Array<UInt32>(count: lhs_abs.count + rhs_abs.count + 1, repeatedValue: 0)
+    var accumulator = Array<UInt64>(count: lhs_abs.count + rhs_abs.count + 1, repeatedValue: 0)
 
     for rhs_index in 0 ..< rhs_abs.count {
         let rhs_digit = UInt64(rhs_abs[rhs_index])
@@ -63,25 +41,14 @@ public func multiplySchoolAlgorithm(lhs: BigInt, _ rhs: BigInt) -> BigInt {
         for lhs_index in 0 ..< lhs_abs.count {
             let lhs_digit = UInt64(lhs_abs[lhs_index])
 
-            // Add the digit from the accumulator to the carry.
-            // There is enough room to add the accumulator to the carry.
-            // Example for 8 bit digits with 16 carry and product:
-            //    (255 lhs digit * 255 rhs digit) + 255 carry + 255 accumulator => 65535
-            carry += UInt64(accumulator[rhs_index + lhs_index])
-
-            // Calculate the product of the two digits plus carry.
-            // Hopfully this result in a fused multiply add.
-            let product = lhs_digit * rhs_digit + carry
-
-            // Now save the low bits from the product back into the accumulator.
-            accumulator[rhs_index + lhs_index] = UInt32(product & 0xffffffff)
-
-            // Set the next carry to the upper bits of the product.
-            carry = product >> 32
+            let result: UInt64
+            let acc = accumulator[rhs_index + lhs_index]
+            (result, carry) = mul_overflow(lhs_digit, rhs_digit, carry: carry, accumulator: acc)
+            accumulator[rhs_index + lhs_index] = result
         }
 
         // Save the overflow in the digit beyond the current most significant byte.
-        accumulator[rhs_index + lhs_abs.count] = UInt32(carry & 0xffffffff)
+        accumulator[rhs_index + lhs_abs.count] = carry
     }
 
     let result_positive: Bool

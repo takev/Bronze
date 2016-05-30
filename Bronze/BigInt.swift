@@ -17,9 +17,13 @@
 
 public struct BigInt : CustomStringConvertible, Equatable, PowerOfTwo {
     // These digits are in little endian order (LSB at index 0).
-    let digits: [UInt32]
+    let digits: [UInt64]
 
-    public init(digits: [UInt32]) {
+    static func nrOfDigitsForBytes(nrBytes: Int) -> Int {
+        return (nrBytes + 7) / 8
+    }
+
+    public init(digits: [UInt64]) {
         let numberOfDigits = BigInt.numberOfSignificantDigits(digits)
         self.digits = Array(digits[0 ..< numberOfDigits])
     }
@@ -29,20 +33,28 @@ public struct BigInt : CustomStringConvertible, Equatable, PowerOfTwo {
     }
 
     public init(bytes: [UInt8]) {
-        var tmp_digits = Array<UInt32>(count: (bytes.count + 3) / 4, repeatedValue:UInt32(0))
+        var tmp_digits = Array<UInt64>(count: BigInt.nrOfDigitsForBytes(bytes.count), repeatedValue:UInt64(0))
 
-        var tmp_digit: UInt32 = 0
+        var tmp_digit: UInt64 = 0
         for (i, byte) in bytes.enumerate() {
-            switch (i & 3) {
+            switch (i % sizeofValue(tmp_digit)) {
             case 0:
-                tmp_digit = UInt32(byte)
+                tmp_digit = UInt64(byte)
             case 1:
-                tmp_digit |= (UInt32(byte) << 8)
+                tmp_digit |= (UInt64(byte) << 8)
             case 2:
-                tmp_digit |= (UInt32(byte) << 16)
+                tmp_digit |= (UInt64(byte) << 16)
             case 3:
-                tmp_digit |= (UInt32(byte) << 24)
-                tmp_digits[i >> 2] = tmp_digit
+                tmp_digit |= (UInt64(byte) << 24)
+            case 4:
+                tmp_digit |= (UInt64(byte) << 32)
+            case 5:
+                tmp_digit |= (UInt64(byte) << 40)
+            case 6:
+                tmp_digit |= (UInt64(byte) << 48)
+            case 7:
+                tmp_digit |= (UInt64(byte) << 56)
+                tmp_digits[i / sizeofValue(tmp_digit)] = tmp_digit
             default:
                 preconditionFailure()
             }
@@ -54,9 +66,7 @@ public struct BigInt : CustomStringConvertible, Equatable, PowerOfTwo {
     public init(_ value: Int) {
         let longValue = Int64(value)
         let unsignedLongValue = UInt64(bitPattern: longValue)
-        let lsb = UInt32(unsignedLongValue & 0xffffffff)
-        let msb = UInt32(unsignedLongValue >> 32)
-        let newDigits = [lsb, msb]
+        let newDigits = [unsignedLongValue]
 
         self.init(digits: newDigits)
     }
@@ -124,21 +134,21 @@ public struct BigInt : CustomStringConvertible, Equatable, PowerOfTwo {
     // Create a positive random number of nrBits in size.
     // The number may be smaller than nrBits if the most significant bits are zero.
     public init(randomNrBits nrBits: Int) {
-        let nrDigits = (nrBits + 31) / 32
-        let nrBitsInLastDigit = (nrDigits * 32) - nrBits
-        let maskOfLastDigit : UInt32 = (UInt32(1) << nrBitsInLastDigit) - 1
-        var tmp_digits = Array<UInt32>(count: nrDigits, repeatedValue:UInt32(0))
+        let nrDigits = (nrBits + 63) / 64
+        let nrBitsInLastDigit = (nrDigits * 64) - nrBits
+        let maskOfLastDigit : UInt64 = (UInt64(1) << nrBitsInLastDigit) - 1
+        var tmp_digits = Array<UInt64>(count: nrDigits, repeatedValue:UInt64(0))
 
         // Create random digits.
         for i in 0 ..< (nrDigits - 1) {
-            tmp_digits[i] = rdrand_u32()
+            tmp_digits[i] = rdrand_u64()
         }
 
         // Create the last random digit, masking bits that we didn't want.
-        let last_digit = rdrand_u32() & maskOfLastDigit
+        let last_digit = rdrand_u64() & maskOfLastDigit
         tmp_digits[nrDigits - 1] = last_digit
 
-        if last_digit & 0x8000000 > 0 {
+        if last_digit & 0x8000000_00000000 > 0 {
             // The last digit would make the BigInt a negative number.
             // So we add one more digit to it to make it positive.
             self.init(digits: tmp_digits + [0])
@@ -149,14 +159,16 @@ public struct BigInt : CustomStringConvertible, Equatable, PowerOfTwo {
 
     // Return the digit at index.
     // When requesting digits beyond the internal size, then a sign extended digit is returned.
-    subscript(i: Int) -> UInt32 {
+    subscript(i: Int) -> UInt64 {
         get {
+            precondition(i >= 0)
+
             if i < digits.count {
                 return digits[i]
             } else if (isPositive) {
                 return 0
             } else {
-                return 0xffffffff
+                return 0xffffffff_ffffffff
             }
         }
     }
@@ -164,22 +176,22 @@ public struct BigInt : CustomStringConvertible, Equatable, PowerOfTwo {
     // Return the bit at index.
     // When requesting bits beyond the internal size, then a sign extended bit is returned.
     public func getBit(i: Int) -> Bool {
-        let digit = self[i / 32]
-        let bit = (digit >> (i % 32)) & 1
+        let digit = self[i / 64]
+        let bit = (digit >> (i % 64)) & 1
         return (bit > 0) ? true : false
     }
 
     public func setBit(i: Int, _ value: Bool = true) -> BigInt {
-        let digitPosition = i / 32
-        let bitPosition = i % 32
+        let digitPosition = i / 64
+        let bitPosition = i % 64
 
         let nrDigits = digitPosition + 1
         let nrDigitsToAdd = max(0, nrDigits - self.digits.count)
-        var newDigits = self.digits + Array<UInt32>(count: nrDigitsToAdd, repeatedValue: 0)
+        var newDigits = self.digits + Array<UInt64>(count: nrDigitsToAdd, repeatedValue: 0)
 
         let digitToModify = newDigits[digitPosition]
-        let mask = UInt32(0xfffffffe) << bitPosition
-        let shiftedValue = value ? (UInt32(1) << bitPosition) : UInt32(0)
+        let mask = (0xffffffff_fffffffe as UInt64) << bitPosition
+        let shiftedValue = value ? (UInt64(1) << bitPosition) : UInt64(0)
         let modifiedDigit = (digitToModify & mask) | shiftedValue
         newDigits[digitPosition] = modifiedDigit
 
@@ -188,11 +200,11 @@ public struct BigInt : CustomStringConvertible, Equatable, PowerOfTwo {
 
     public func digitIsPositive(i: Int) -> Bool {
         assert(i >= 0 && i < digits.count)
-        return digits[i] < 0x80000000
+        return digits[i] < 0x80000000_00000000
     }
 
     public var isPositive: Bool {
-        return digits.count == 0 || digits.last! < 0x80000000
+        return digits.count == 0 || digits.last! < 0x80000000_00000000
     }
 
     public var isNegative: Bool {
@@ -215,11 +227,20 @@ public struct BigInt : CustomStringConvertible, Equatable, PowerOfTwo {
     public var ffs: Int {
         for (i, digit) in digits.enumerate() {
             if digit > 0 {
-                return i * 32 + digit.ffs
+                return i * 64 + digit.ffs
             }
         }
         return 0
     }
+
+    public var clz: Int {
+        preconditionFailure("Leading zeros make no sence on variable sized integers.")
+    }
+
+    public var clog2: Int {
+        preconditionFailure("Not implemented.")
+    }
+
 
     public var abs: BigInt {
         return isNegative ? -self : self
@@ -243,7 +264,7 @@ public struct BigInt : CustomStringConvertible, Equatable, PowerOfTwo {
         } else {
             var hex_values = Array<String>()
             for var digit in self.digits {
-                for _ in 0 ..< 8 {
+                for _ in 0 ..< (sizeof(UInt64) * 2) {
                     switch (digit & 0xf) {
                     case 0x0:     hex_values.append("0")
                     case 0x1:     hex_values.append("1")
@@ -280,23 +301,21 @@ public struct BigInt : CustomStringConvertible, Equatable, PowerOfTwo {
         case 0:
             return 0
         case 1:
-            return Int(digits[0])
-        case 2:
-            return Int((UInt64(digits[1]) << 32) & UInt64(digits[0]))
+            return Int(Int64(bitPattern:digits[0]))
         default:
             preconditionFailure("Overflow")
         }
     }
 
     // Count the number of significant digits.
-    static func numberOfSignificantDigits(digits: [UInt32]) -> Int {
+    static func numberOfSignificantDigits(digits: [UInt64]) -> Int {
         var i = digits.count - 1;
         while i >= 1 {
-            switch (digits[i], digits[i - 1] < 0x80000000) {
+            switch (digits[i], digits[i - 1] < 0x80000000_00000000) {
             case (0, true):
                 // If this digit is leading zeros and the next digit has a leading zero, then we can skip this digit.
                 break
-            case (0xffffffff, false):
+            case (0xffffffff_ffffffff, false):
                 // If this digit is leasing ones and the next digit has a leading one, then we can skip this digit.
                 break
             default:

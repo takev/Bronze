@@ -33,7 +33,7 @@ func divisionSchoolAlgorithm(lhs: BigInt, _ rhs: BigInt) -> (BigInt, BigInt) {
     var quotient = BigInt()
     var remainder = BigInt()
 
-    var i = abs_lhs.digits.count * 32 - 1
+    var i = abs_lhs.digits.count * 64 - 1
     while i >= 0 {
         remainder = shiftLeftByOneBit(remainder, newBit:abs_lhs.getBit(i))
         if remainder >= abs_rhs {
@@ -56,7 +56,7 @@ func divisionSchoolAlgorithm(lhs: BigInt, _ rhs: BigInt) -> (BigInt, BigInt) {
 func reductionBarretFactors(modulus: BigInt) -> (Int, BigInt) {
     // k needs to be twice the number of bits of the modulus,
     // otherwise r just becomes 1, and we need precission.
-    let k = modulus.digits.count * 32 * 2
+    let k = modulus.digits.count * 64 * 2
 
     // r = (2**k) / n
     let r = (BigInt(1) << k) / modulus

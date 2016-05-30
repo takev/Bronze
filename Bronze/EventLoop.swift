@@ -29,28 +29,28 @@ class EventLoop {
     func iteration() {
         var pollHandlers: [EventHandler] = []
         var timeoutHandlers: [EventHandler] = []
-        var closestDate = Timestamp.endOfTime()
+        var closestTimeout = Timestamp.endOfTime()
 
         for eventHandler in eventHandlers {
             // Setup file descriptor events for poll().
-            if eventHandler.waitingUntilReadable || eventHandler.waitingUntilWritable {
+            if eventHandler.isReadable || eventHandler.isWritable {
                 guard let fileDescriptor = eventHandler.optionalFileDescriptor else {
                     preconditionFailure("File descriptor must be set.")
                 }
 
                 polls_p[pollHandlers.count].fd = Int32(fileDescriptor)
                 polls_p[pollHandlers.count].events = Int16(
-                    (eventHandler.waitingUntilReadable ? POLLIN : Int32(0)) |
-                    (eventHandler.waitingUntilWritable ? POLLOUT: Int32(0))
+                    (eventHandler.isReadable ? POLLIN : Int32(0)) |
+                    (eventHandler.isWritable ? POLLOUT: Int32(0))
                 )
                 polls_p[pollHandlers.count].revents = 0
                 pollHandlers.append(eventHandler)
             }
 
             // Wait until timeout
-            if let waitingUntilDate = eventHandler.optionalWaitingUntilDate {
-                if waitingUntilDate < closestDate {
-                    closestDate = waitingUntilDate
+            if let timeout = eventHandler.optionalTimeout {
+                if timeout < closestTimeout {
+                    closestTimeout = timeout
                 }
 
                 timeoutHandlers.append(eventHandler)
@@ -58,7 +58,7 @@ class EventLoop {
         }
 
         // Wait a maximum of 1 minute
-        let timeout = clamp(closestDate - Timestamp.now(), minimum: Period.zero(), maximum: Period.minutes(1))
+        let timeout = clamp(closestTimeout - Timestamp.now(), minimum: Period.zero(), maximum: Period.minutes(1))
 
         // Poll waits for file descriptor events, but can also be used as a more accurate sleep when there are no file descriptor
         // events to read from.
@@ -67,24 +67,24 @@ class EventLoop {
         // Execute all the writes, this will clear the buffers first.
         for (i, eventHandler) in pollHandlers.enumerate() {
             if (polls_p[i].revents & Int16(POLLOUT)) > 0 {
-                eventHandler.isWritable()
+                eventHandler.handleWritable()
             }
         }
 
         // Execute all the reads.
         for (i, eventHandler) in pollHandlers.enumerate() {
             if (polls_p[i].revents & Int16(POLLIN)) > 0 {
-                eventHandler.isReadable()
+                eventHandler.handleReadable()
             }
         }
 
         // The timeouts may have been set because it was waiting for a read event, so timeouts needs
         // to be executed after all reads are executed.
         for eventHandler in timeoutHandlers {
-            if let waitingUntilDate = eventHandler.optionalWaitingUntilDate {
+            if let timeout = eventHandler.optionalTimeout {
                 // Compare to the current time, as the event handlers may have taken some time to execute.
-                if waitingUntilDate < Timestamp.now() {
-                    eventHandler.dateHasPassed()
+                if timeout < Timestamp.now() {
+                    eventHandler.handleTimeout()
                 }
             }
         }

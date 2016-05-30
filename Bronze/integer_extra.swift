@@ -59,6 +59,10 @@ public protocol PowerOfTwo {
     // Return the index + 1 of the least significant bit that is set to '1'.
     // Return zero when no bits are set.
     var ffs: Int { get }
+
+    // Return the number of bits needed to represent all numbers from 0 ..< self
+    // Return zero when no bits are set.
+    var clog2: Int { get }
 }
 
 public extension PowerOfTwo {
@@ -82,6 +86,15 @@ extension Int: PowerOfTwo {
         precondition(self >= 0, "Not implemented.")
         return UInt64(self).ffs
     }
+
+    public var clz: Int {
+        precondition(self >= 0, "Not implemented.")
+        return UInt64(self).clz
+    }
+
+    public var clog2: Int {
+        return (sizeofValue(self) * 8) - UInt64(self - 1).clz
+    }
 }
 
 extension UInt32: PowerOfTwo {
@@ -91,6 +104,14 @@ extension UInt32: PowerOfTwo {
 
     public var ffs: Int {
         return Int(ffs_u32(self))
+    }
+
+    public var clz: Int {
+        return Int(clz_u32(self))
+    }
+    
+    public var clog2: Int {
+        return (sizeofValue(self) * 8) - (self - 1).clz
     }
 }
 
@@ -102,5 +123,64 @@ extension UInt64: PowerOfTwo {
     public var ffs: Int {
         return Int(ffs_u64(self))
     }
+    
+    public var clz: Int {
+        return Int(clz_u64(self))
+    }
+    
+    public var clog2: Int {
+        return (sizeofValue(self) * 8) - (self - 1).clz
+    }
 }
+
+public func shiftl_overflow(lhs: UInt64, _ rhs: Int) -> (UInt64, UInt64) {
+    let result = shiftl_overflow_u64_2(lhs, UInt64(rhs))
+    return (result.x, result.y)
+}
+
+public func shiftl_overflow(lhs: UInt64, _ rhs: Int, carry: UInt64) -> (UInt64, UInt64) {
+    let result = shiftl_overflow_u64_3(lhs, UInt64(rhs), carry)
+    return (result.x, result.y)
+}
+
+public func shiftr_overflow(lhs: UInt64, _ rhs: Int) -> (UInt64, UInt64) {
+    let result = shiftr_overflow_u64_2(lhs, UInt64(rhs))
+    return (result.x, result.y)
+}
+
+public func shiftr_overflow(lhs: UInt64, _ rhs: Int, carry: UInt64) -> (UInt64, UInt64) {
+    let result = shiftr_overflow_u64_3(lhs, UInt64(rhs), carry)
+    return (result.x, result.y)
+}
+
+public func shiftr_overflow_sign_extend(lhs: UInt64, _ rhs: Int) -> (UInt64, UInt64) {
+    let result = shiftr_overflow_sign_extend_u64_2(lhs, UInt64(rhs))
+    return (result.x, result.y)
+}
+
+public func mul_overflow(lhs: UInt64, _ rhs: UInt64) -> (UInt64, UInt64) {
+    let result = mul_overflow_u64_2(lhs, rhs)
+    return (result.x, result.y)
+}
+
+public func mul_overflow(lhs: UInt64, _ rhs: UInt64, carry: UInt64) -> (UInt64, UInt64) {
+    let result = mul_overflow_u64_3(lhs, rhs, carry)
+    return (result.x, result.y)
+}
+
+public func mul_overflow(lhs: UInt64, _ rhs: UInt64, carry: UInt64, accumulator: UInt64) -> (UInt64, UInt64) {
+    let result = mul_overflow_u64_4(lhs, rhs, carry, accumulator)
+    return (result.x, result.y)
+}
+
+public func add_overflow(lhs: UInt64, _ rhs: UInt64) -> (UInt64, UInt64) {
+    let result = add_overflow_u64_2(lhs, rhs)
+    return (result.x, result.y)
+}
+
+public func add_overflow(lhs: UInt64, _ rhs: UInt64, carry: UInt64) -> (UInt64, UInt64) {
+    let result = add_overflow_u64_3(lhs, rhs, carry)
+    return (result.x, result.y)
+}
+
 

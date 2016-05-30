@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-func additionGeneric(lhs: BigInt, _ optionalRhs: BigInt?, carry carryAndAccumulator: UInt64 = 0, invert: Bool = false, handleOverflow: Bool = true) -> BigInt {
-    var carryAndAccumulator = carryAndAccumulator;
+func additionGeneric(lhs: BigInt, _ optionalRhs: BigInt?, carry: UInt64 = 0, invert: Bool = false, handleOverflow: Bool = true) -> BigInt {
+    var carry = carry;
 
     let nrNewDigits: Int
     switch (optionalRhs, handleOverflow) {
@@ -25,25 +25,22 @@ func additionGeneric(lhs: BigInt, _ optionalRhs: BigInt?, carry carryAndAccumula
     case (.Some(let rhs), true):        nrNewDigits = max(lhs.digits.count, rhs.digits.count) + 1
     }
 
-    var newDigits = Array<UInt32>(count: nrNewDigits, repeatedValue: 0)
+    var newDigits = Array<UInt64>(count: nrNewDigits, repeatedValue: 0)
 
     for i in 0 ..< nrNewDigits {
+        let result: UInt64
         switch (optionalRhs, invert) {
         case (.None, false):
-            carryAndAccumulator += UInt64(lhs[i])
+            (result, carry) = add_overflow(lhs[i], 0, carry: carry)
         case (.None, true):
-            carryAndAccumulator += UInt64(~lhs[i])
+            (result, carry) = add_overflow(~lhs[i], 0, carry: carry)
         case (.Some(let rhs), false):
-            carryAndAccumulator += UInt64(lhs[i])
-            carryAndAccumulator += UInt64(rhs[i])
+            (result, carry) = add_overflow(lhs[i], rhs[i], carry: carry)
         case (.Some(let rhs), true):
-            carryAndAccumulator += UInt64(lhs[i])
-            carryAndAccumulator += UInt64(~rhs[i])
+            (result, carry) = add_overflow(lhs[i], ~rhs[i], carry: carry)
         }
 
-        newDigits[i] = UInt32(carryAndAccumulator & 0xffffffff)
-
-        carryAndAccumulator >>= 32
+        newDigits[i] = result
     }
 
     return BigInt(digits: newDigits)

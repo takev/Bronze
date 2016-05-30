@@ -37,6 +37,8 @@
 		682EA8F51CCCBC5D00A5C807 /* Timestamp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 682EA8F41CCCBC5D00A5C807 /* Timestamp.swift */; };
 		682EA8FD1CD16B4600A5C807 /* Period.swift in Sources */ = {isa = PBXBuildFile; fileRef = 682EA8FC1CD16B4600A5C807 /* Period.swift */; };
 		682EA9001CD2C0ED00A5C807 /* SocketEventHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 682EA8FF1CD2C0ED00A5C807 /* SocketEventHandler.swift */; };
+		68A36B531CF09C4400B36790 /* Socket_bridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 68A36B521CF09C4400B36790 /* Socket_bridge.m */; };
+		68A36B541CF09D6B00B36790 /* Socket_bridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 68A36B511CF09C1B00B36790 /* Socket_bridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		68DF0F781C2643F7007AB7E3 /* BigInt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68DF0F771C2643F7007AB7E3 /* BigInt.swift */; };
 		68DF0F7E1C28CCDD007AB7E3 /* BigInt_tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68DF0F7D1C28CCDD007AB7E3 /* BigInt_tests.swift */; };
 		68DF0F801C334D4C007AB7E3 /* BigInt_utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68DF0F7F1C334D4C007AB7E3 /* BigInt_utils.swift */; };
@@ -101,6 +103,8 @@
 		682EA8F41CCCBC5D00A5C807 /* Timestamp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Timestamp.swift; sourceTree = "<group>"; };
 		682EA8FC1CD16B4600A5C807 /* Period.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Period.swift; sourceTree = "<group>"; };
 		682EA8FF1CD2C0ED00A5C807 /* SocketEventHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SocketEventHandler.swift; sourceTree = "<group>"; };
+		68A36B511CF09C1B00B36790 /* Socket_bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Socket_bridge.h; sourceTree = "<group>"; };
+		68A36B521CF09C4400B36790 /* Socket_bridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Socket_bridge.m; sourceTree = "<group>"; };
 		68DF0F751C24D1F6007AB7E3 /* Preferences.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Preferences.md; sourceTree = "<group>"; };
 		68DF0F771C2643F7007AB7E3 /* BigInt.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BigInt.swift; sourceTree = "<group>"; };
 		68DF0F7D1C28CCDD007AB7E3 /* BigInt_tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BigInt_tests.swift; sourceTree = "<group>"; };
@@ -230,6 +234,8 @@
 				680AE7A21CDCA4AB00C5AB9A /* SocketAddress.swift */,
 				682AE8681CE44CFE00A8CDBB /* SocketAddress_tests.swift */,
 				682AE8721CE7A0A100A8CDBB /* Socket.swift */,
+				68A36B511CF09C1B00B36790 /* Socket_bridge.h */,
+				68A36B521CF09C4400B36790 /* Socket_bridge.m */,
 			);
 			name = Network;
 			sourceTree = "<group>";
@@ -341,6 +347,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				68DF0F9B1C383E0A007AB7E3 /* integer_intrinsics.h in Headers */,
+				68A36B541CF09D6B00B36790 /* Socket_bridge.h in Headers */,
 				68FDE1671C091DBF001D009F /* Bronze.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -462,6 +469,7 @@
 				68FDE1911C0922B9001D009F /* OptionType.swift in Sources */,
 				68DF0F821C335042007AB7E3 /* integer_extra.swift in Sources */,
 				682EA8E71CC2BDEE00A5C807 /* DHGroup.swift in Sources */,
+				68A36B531CF09C4400B36790 /* Socket_bridge.m in Sources */,
 				682A0B9B1C1CE196006199BB /* PreferencesSchemaItemType.swift in Sources */,
 				68DF0F841C340B63007AB7E3 /* BigInt_BCD.swift in Sources */,
 				68DF0F8F1C375719007AB7E3 /* BigInt_operators.swift in Sources */,

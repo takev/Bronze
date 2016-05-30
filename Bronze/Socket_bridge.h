@@ -9,5 +9,7 @@
 #ifndef Socket_bridge_h
 #define Socket_bridge_h
 
+int fcntl_setint(int fildes, int cmd, int value);
+int fcntl_getint(int fildes, int cmd, int *value);
 
 #endif /* Socket_bridge_h */

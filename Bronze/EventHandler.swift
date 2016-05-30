@@ -24,7 +24,7 @@ public class EventHandler {
         return nil
     }
 
-    var optionalWaitingUntilDate: Timestamp? {
+    var optionalTimeout: Timestamp? {
         return nil
     }
 
@@ -32,21 +32,21 @@ public class EventHandler {
         self.loop = loop
     }
 
-    var waitingUntilReadable: Bool {
+    var isReadable: Bool {
         return false
     }
 
-    var waitingUntilWritable: Bool {
+    var isWritable: Bool {
         return false
     }
 
-    func isReadable() {
+    func handleReadable() {
     }
 
-    func isWritable() {
+    func handleWritable() {
     }
 
-    func dateHasPassed() {
+    func handleTimeout() {
     }
 
 }

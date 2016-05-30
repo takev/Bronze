@@ -16,7 +16,7 @@
 
 import Foundation
 
-func BCDToDigits(BCDDigits: UInt32) -> [UInt32] {
+func BCDToDigits(BCDDigits: UInt64) -> [UInt64] {
     return [
         (BCDDigits >>  0) & 0xf,
         (BCDDigits >>  4) & 0xf,
@@ -25,12 +25,20 @@ func BCDToDigits(BCDDigits: UInt32) -> [UInt32] {
         (BCDDigits >> 16) & 0xf,
         (BCDDigits >> 20) & 0xf,
         (BCDDigits >> 24) & 0xf,
-        (BCDDigits >> 28) & 0xf
+        (BCDDigits >> 28) & 0xf,
+        (BCDDigits >> 32) & 0xf,
+        (BCDDigits >> 36) & 0xf,
+        (BCDDigits >> 40) & 0xf,
+        (BCDDigits >> 44) & 0xf,
+        (BCDDigits >> 48) & 0xf,
+        (BCDDigits >> 52) & 0xf,
+        (BCDDigits >> 56) & 0xf,
+        (BCDDigits >> 60) & 0xf
     ]
 }
 
-func digitsToBCD(digits: [UInt32]) -> UInt32 {
-    var tmp: UInt32 = 0
+func digitsToBCD(digits: [UInt64]) -> UInt64 {
+    var tmp: UInt64 = 0
 
     for i in 0 ..< digits.count {
         let digit = digits[i]
@@ -41,9 +49,9 @@ func digitsToBCD(digits: [UInt32]) -> UInt32 {
     return tmp
 }
 
-func dabble(BCDDigits: UInt32) -> UInt32 {
+func dabble(BCDDigits: UInt64) -> UInt64 {
     let digits = BCDToDigits(BCDDigits)
-    var carried_digits = Array<UInt32>(count: digits.count, repeatedValue: 0)
+    var carried_digits = Array<UInt64>(count: digits.count, repeatedValue: 0)
 
     for i in 0 ..< digits.count {
         let digit = digits[i]
@@ -54,11 +62,11 @@ func dabble(BCDDigits: UInt32) -> UInt32 {
 }
 
 /// Convert a big integer number into BCD.
-func doubleDabble(number: [UInt32]) -> [UInt32] {
-    let number_nr_bits = number.count * 32
-    let bcd_nr_bits = ((Int(ceil(Double(number_nr_bits) / 3.0) * 4) + 31) / 32) * 32
+func doubleDabble(number: [UInt64]) -> [UInt64] {
+    let number_nr_bits = number.count * 64
+    let bcd_nr_bits = ((Int(ceil(Double(number_nr_bits) / 3.0) * 4) + 63) / 64) * 64
 
-    var buffer = number + Array<UInt32>(count: bcd_nr_bits / 32, repeatedValue: 0)
+    var buffer = number + Array<UInt64>(count: bcd_nr_bits / 64, repeatedValue: 0)
 
     for _ in 0 ..< number_nr_bits {
         // For each nible that is higher than 4, add 3.
@@ -67,18 +75,16 @@ func doubleDabble(number: [UInt32]) -> [UInt32] {
         }
 
         // Shift left by 1.
-        var carry: UInt64 = 0
+        var overflow: UInt64 = 0
         for i in 0 ..< buffer.count {
-            carry |= (UInt64(buffer[i]) << 1)
-            buffer[i] = UInt32(carry & 0xffffffff)
-            carry >>= 32
+            (buffer[i], overflow) = shiftl_overflow(buffer[i], 1, carry: overflow)
         }
     }
 
-    return Array<UInt32>(buffer[number.count ..< buffer.count])
+    return Array<UInt64>(buffer[number.count ..< buffer.count])
 }
 
-func ShortBCDToString(BCDDigits: UInt32) -> [String] {
+func ShortBCDToString(BCDDigits: UInt64) -> [String] {
     var digitsString: [String] = []
 
     let digits = BCDToDigits(BCDDigits)
@@ -106,7 +112,7 @@ func ShortBCDToString(BCDDigits: UInt32) -> [String] {
     return digitsString
 }
 
-func BCDToString(BCDNumber: [UInt32]) -> String {
+func BCDToString(BCDNumber: [UInt64]) -> String {
     let characters = BCDNumber.reduce(Array<String>()) { $0 + ShortBCDToString($1) }.reverse()
     return characters.joinWithSeparator("")
 }
@@ -126,7 +132,7 @@ func DecimalStripLeadingZeros(number: String) -> String {
     preconditionFailure("Unreachable, unless the string is zero size")
 }
 
-func BCDToStringWithoutLeadingZeros(BCDNumber: [UInt32]) -> String {
+func BCDToStringWithoutLeadingZeros(BCDNumber: [UInt64]) -> String {
     let decimalString = BCDToString(BCDNumber)
     return DecimalStripLeadingZeros(decimalString)
 }

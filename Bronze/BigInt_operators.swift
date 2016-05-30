@@ -48,70 +48,59 @@ public prefix func ~(lhs: BigInt) -> BigInt {
 }
 
 public func >>(lhs: BigInt, rhs: Int) -> BigInt {
-    if rhs == 0 {
+    switch rhs {
+    case 0:
         return lhs
-
-    } else if rhs == 1 {
-        return shiftRightByOneBit(lhs)
-
-    } else if rhs < 0 {
+    case 1 ..< 64:
+        return shiftRightByAtMostOneDigit(lhs, rhs)
+    case let rhs where (rhs % 64) == 0:
+        return shiftRightByDigits(lhs, rhs / 64)
+    case let rhs where rhs < 0:
         return lhs << -rhs
-
-    } else if (rhs % 32) == 0 {
-        return shiftRightByDigits(lhs, rhs / 32)
-
-    } else {
+    default:
         return shiftRightByBits(lhs, rhs)
     }
 }
 
 public func <<(lhs: BigInt, rhs: Int) -> BigInt {
-    if rhs == 0 {
+    switch rhs {
+    case 0:
         return lhs
-
-    } else if rhs == 1 {
-        return shiftLeftByOneBit(lhs)
-
-    } else if rhs < 0 {
+    case 1 ..< 64:
+        return shiftLeftByAtMostOneDigit(lhs, rhs)
+    case let rhs where (rhs % 64) == 0:
+        return shiftLeftByDigits(lhs, rhs / 64)
+    case let rhs where rhs < 0:
         return lhs >> -rhs
-
-    } else if (rhs % 32) == 0 {
-        return shiftLeftByDigits(lhs, rhs / 32)
-
-    } else {
+    default:
         return shiftLeftByBits(lhs, rhs)
     }
 }
 
 public func *(lhs: BigInt, rhs: Int) -> BigInt {
-    if rhs == 0 {
+    switch rhs {
+    case 0:
         return BigInt()
-
-    } else if rhs == 1 {
+    case 1:
         return lhs
-
-    } else if rhs > 0 && rhs.isPowerOfTwo {
+    case let rhs where rhs > 0 && rhs.isPowerOfTwo:
         return lhs << rhs.exponentOfPowerOfTwo
-
-    } else if rhs > 1 && rhs <= 2147483647 {
-        return multiplyByDigit(lhs, UInt32(rhs))
-
-    } else {
+    case let rhs where rhs >= 1:
+        return multiplyByDigit(lhs, UInt64(rhs))
+    default:
         return lhs * BigInt(rhs)
     }
 }
 
 public func *(lhs: BigInt, rhs: BigInt) -> BigInt {
-    if rhs.digits.count == 0 {
+    switch rhs {
+    case let rhs where rhs.digits.count == 0:
         return BigInt()
-
-    } else if rhs > 0 && rhs.digits.count == 1 {
+    case let rhs where rhs > 0 && rhs.digits.count == 1:
         return lhs * Int(rhs.digits[0])
-
-    } else if rhs >= 0 && rhs.isPowerOfTwo {
+    case let rhs where rhs >= 0 && rhs.isPowerOfTwo:
         return lhs << rhs.exponentOfPowerOfTwo
-
-    } else {
+    default:
         return multiplySchoolAlgorithm(lhs, rhs)
     }
 }
@@ -179,8 +168,8 @@ public func %(lhs: BigInt, rhs: Int) -> BigInt {
         return BigInt()
     } else if rhs == 2 {
         return BigInt(Int(lhs.digits[0] & 1))
-    } else if rhs.isPowerOfTwo && rhs > 0 && rhs <= 2147483647 {
-        return BigInt(Int(lhs.digits[0] % UInt32(rhs)))
+    } else if rhs.isPowerOfTwo && rhs > 0 && rhs <= 9223372036854775807 {
+        return BigInt(Int(lhs.digits[0] % UInt64(rhs)))
     } else {
         return lhs % BigInt(rhs)
     }
@@ -189,8 +178,8 @@ public func %(lhs: BigInt, rhs: Int) -> BigInt {
 public func ==(lhs: BigInt, rhs: Int) -> Bool {
     if rhs == 0 {
         return lhs.digits.count == 0
-    } else if rhs > 0 && rhs <= 2147483647 {
-        return (lhs.digits.count == 1) && (lhs.digits[0] == UInt32(rhs))
+    } else if rhs > 0 && rhs <= 9223372036854775807 {
+        return (lhs.digits.count == 1) && (lhs.digits[0] == UInt64(rhs))
     } else {
         return lhs == BigInt(rhs)
     }
